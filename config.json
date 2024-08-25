@@ -1,0 +1,10 @@
+{
+    "threshold": 10,
+    "smtp_server": "smtp.mail.com",
+    "smtp_port": 465,
+    "smtp_user": "",
+    "smtp_password": "",
+    "from_email": "",
+    "to_email": "",
+    "url": ""
+}

@@ -18,8 +18,14 @@ def read_from_json(filename, field, default):
 
 def write_to_json(filename, field, val):
     try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+
+        data[field] = val
+
         with open(filename, 'w') as file:
-            json.dump({field: val}, file, indent=4)
+            json.dump(data, file, indent=4)
+
     except IOError as e:
         print(f"Error writing to JSON file: {e}")
 

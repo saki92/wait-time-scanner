@@ -29,7 +29,8 @@ def write_to_json(filename, field, val):
     except IOError as e:
         print(f"Error writing to JSON file: {e}")
 
-def fetch_and_parse(url, config_file):
+def fetch_and_parse(config_file, city):
+    url = read_from_json(config_file, 'url_'+city, '')
     try:
         # Define a User-Agent string that mimics a Firefox browser
         headers = {
@@ -49,7 +50,7 @@ def fetch_and_parse(url, config_file):
         print(f"First word extracted: '{first_word}'")
 
         # Read the threshold value from the JSON file
-        threshold = read_from_json(config_file, 'threshold', 30)
+        threshold = read_from_json(config_file, 'threshold_'+city, 30)
 
         # Attempt to convert the first word to a number
         try:
@@ -57,9 +58,9 @@ def fetch_and_parse(url, config_file):
             print(f"Converted to number: {number}")
 
             # Check if the number is below the threshold and send an email if it is
-            if number < threshold:
-                send_email(number)
-                write_to_json(config_file, 'threshold', number)
+            if number != threshold:
+                send_email(number, threshold, city)
+                write_to_json(config_file, 'threshold_'+city, number)
             else:
                 print(f"Number {number} is above the threshold of {threshold}.")
 
@@ -69,7 +70,7 @@ def fetch_and_parse(url, config_file):
     except requests.RequestException as e:
         print(f"An error occurred: {e}")
 
-def send_email(number):
+def send_email(number, threshold, city):
     # Email configuration
     smtp_server = read_from_json(config_file, 'smtp_server', "")
     smtp_port = read_from_json(config_file, 'smtp_port', 465)
@@ -77,7 +78,10 @@ def send_email(number):
     smtp_password = read_from_json(config_file, 'smtp_password', "")
     from_email = smtp_user
     to_email = read_from_json(config_file, 'to_email', "")
-    subject = 'Alert: Number Below Threshold'
+    if number < threshold:
+        subject = 'Alert: Number Reduced'
+    else:
+        subject = 'Number Increased'
     
     # Create email message
     message = MIMEMultipart()
@@ -85,7 +89,7 @@ def send_email(number):
     message['To'] = to_email
     message['Subject'] = subject
     
-    body = f"Current wait time is {number} is below the threshold."
+    body = f"Location: {city}. Current wait time is {number} and old was {threshold}."
     message.attach(MIMEText(body, 'plain'))
 
     # Send the email
@@ -99,6 +103,9 @@ def send_email(number):
 
 if __name__ == "__main__":
     config_file = 'config.json'
-    url = read_from_json(config_file, 'url', '')
-    fetch_and_parse(url, config_file)
+    fetch_and_parse(config_file, "Chennai")
+    fetch_and_parse(config_file, "Delhi")
+    fetch_and_parse(config_file, "Kolkatta")
+    fetch_and_parse(config_file, "Hyderabad")
+    fetch_and_parse(config_file, "Mumbai")
 
